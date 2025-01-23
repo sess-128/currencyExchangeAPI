@@ -3,24 +3,24 @@ package org.example.currencyexchangerefactoring.model;
 
 import java.util.Objects;
 
-public class Currency {
+public class CurrencyE {
     private Long id;
     private String code;
     private String name;
     private String sign;
 
 
-    public Currency(Long id, String code, String name, String sign) {
+    public CurrencyE(Long id, String code, String name, String sign) {
         this.id = id;
         this.code = code;
         this.name = name;
         this.sign = sign;
     }
 
-    public Currency() {
+    public CurrencyE() {
     }
 
-    public Currency(String code, String name, String sign) {
+    public CurrencyE(String code, String name, String sign) {
         this.code = code;
         this.name = name;
         this.sign = sign;
@@ -61,8 +61,8 @@ public class Currency {
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
-        Currency currency = (Currency) o;
-        return Objects.equals(id, currency.id) && Objects.equals(code, currency.code) && Objects.equals(name, currency.name) && Objects.equals(sign, currency.sign);
+        CurrencyE currencyE = (CurrencyE) o;
+        return Objects.equals(id, currencyE.id) && Objects.equals(code, currencyE.code) && Objects.equals(name, currencyE.name) && Objects.equals(sign, currencyE.sign);
     }
 
     @Override
@@ -72,7 +72,7 @@ public class Currency {
 
     @Override
     public String toString() {
-        return "Currency{" +
+        return "CurrencyE{" +
                "id=" + id +
                ", code='" + code + '\'' +
                ", name='" + name + '\'' +

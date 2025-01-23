@@ -18,10 +18,9 @@ public class ExchangeRateDao implements Dao<Integer, ExchangeRate> {
     private static final ExchangeRateDao INSTANCE = new ExchangeRateDao();
     private static final String SAVE_SQL = """
             INSERT INTO exchange_rates (
-                base_currency_id,
-                target_currency_id,
-                rate)
-            VALUES (?, ?, ?);
+                base_currency_id, target_currency_id, rate)
+                SELECT b.ID, t.ID, ? FROM currencies b, currencies t
+                WHERE b.code = ? AND t.code = ?
             """;
     private static final String UPDATE_SQL = """
                 UPDATE exchange_rates
@@ -29,25 +28,24 @@ public class ExchangeRateDao implements Dao<Integer, ExchangeRate> {
                 WHERE base_currency_id = ? AND target_currency_id = ?
             """;
     private static final String FIND_ALL_WITH_CURRENCIES_SQL = """
-        
-            SELECT
-            er.id AS exchange_rate_id,
-            er.base_currency_id,
-            bc.code AS base_currency_code,
-            bc.full_name AS base_currency_full_name,
-            bc.sign AS base_currency_sign,
-            er.target_currency_id,
-            tc.code AS target_currency_code,
-            tc.full_name AS target_currency_full_name,
-            tc.sign AS target_currency_sign,
-            er.rate
-        FROM
-            exchange_rates er
-        JOIN
-            currencies bc ON er.base_currency_id = bc.id
-        JOIN
-            currencies tc ON er.target_currency_id = tc.id
-        """;
+                SELECT
+                er.id AS exchange_rate_id,
+                er.base_currency_id,
+                bc.code AS base_currency_code,
+                bc.full_name AS base_currency_full_name,
+                bc.sign AS base_currency_sign,
+                er.target_currency_id,
+                tc.code AS target_currency_code,
+                tc.full_name AS target_currency_full_name,
+                tc.sign AS target_currency_sign,
+                er.rate
+            FROM
+                exchange_rates er
+            JOIN
+                currencies bc ON er.base_currency_id = bc.id
+            JOIN
+                currencies tc ON er.target_currency_id = tc.id
+            """;
     private static final String FIND_BY_PAIR_SQL = FIND_ALL_WITH_CURRENCIES_SQL + """
             WHERE
                          er.base_currency_id = ?
@@ -90,7 +88,7 @@ public class ExchangeRateDao implements Dao<Integer, ExchangeRate> {
             return Optional.ofNullable(exchangeRate);
 
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new DaoException(e);
         }
     }
 
@@ -98,9 +96,9 @@ public class ExchangeRateDao implements Dao<Integer, ExchangeRate> {
     public ExchangeRate save(ExchangeRate exchangeRate) {
         try {
             PreparedStatement preparedStatement = STATEMENT_MAKER.getStatement(SAVE_SQL, Statement.RETURN_GENERATED_KEYS);
-            preparedStatement.setLong(1, exchangeRate.getBaseCurrency().getId());
-            preparedStatement.setLong(2, exchangeRate.getTargetCurrency().getId());
-            preparedStatement.setBigDecimal(3, exchangeRate.getRate());
+            preparedStatement.setBigDecimal(1, exchangeRate.getRate());
+            preparedStatement.setLong(2, exchangeRate.getBaseCurrency().getId());
+            preparedStatement.setLong(3, exchangeRate.getTargetCurrency().getId());
 
             preparedStatement.executeUpdate();
             var generatedKeys = preparedStatement.getGeneratedKeys();
@@ -111,7 +109,7 @@ public class ExchangeRateDao implements Dao<Integer, ExchangeRate> {
             return exchangeRate;
 
         } catch (SQLException e) {
-            throw new ExchangeRateAlreadyExistException(e);
+            throw new DaoException(e);
         }
     }
 
@@ -129,8 +127,9 @@ public class ExchangeRateDao implements Dao<Integer, ExchangeRate> {
             throw new DaoException(e);
         }
     }
+
     public static ExchangeRateDao getInstance() {
         return INSTANCE;
     }
 
-    }
+}
